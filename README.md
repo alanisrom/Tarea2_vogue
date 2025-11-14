@@ -1,14 +1,10 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
+# Tarea 2: Análisis de tonos de piel en portadas de Vogue"
 
-# Tarea 2 "Análisis de tonos de piel en portadas de Vogue"
+![](images/clipboard-1988719321.png)
 
 ## Descripción
 
-El presente trabajo busca mostrar la representación de tonos de piel en portadas de Vogue entre los años 2000 y 2018, utilizando la variable de luminosidad (l) derivada de la base de datos faces.csv, la cual fue extraída del GitHub de "The pudding". La variable l toma valores entre 0 y 1, donde 0 representa el negro absoluto y 1 el blanco, capturando así el nivel de brillo promedio del rostro detectado en cada portada.
+El presente trabajo busca mostrar la representación de tonos de piel en portadas de Vogue entre los años 2000 y 2018, utilizando la variable de luminosidad (l) derivada de la base de datos "faces.csv", la cual fue extraída del GitHub de "The pudding". La variable l toma valores entre 0 y 1, donde 0 representa el negro absoluto y 1 el blanco, capturando así el nivel de brillo promedio del rostro detectado en cada portada.
 
 ## 1. Librerías necesarias
 
