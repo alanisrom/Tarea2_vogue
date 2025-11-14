@@ -6,17 +6,19 @@ El presente trabajo busca mostrar la representación de tonos de piel en portada
 
 ## 1. Librerías necesarias
 
----
+``` r
 library(tidyverse)
 library(lubridate) 
 library(ggplot2) 
 library(readr) 
 library(dplyr)
----
+```
 
 ## 2. Carga base de datos orginal
 
-df_original \<- read_csv("C:/Users/avrom/OneDrive - Universidad Católica de Chile/2. Magister CP Gobierno y PP/Análisis magister/1. Tareas/Tarea2_vogue/faces.csv")
+``` r
+df_original <- read_csv("C:/Users/avrom/OneDrive - Universidad Católica de Chile/2. Magister CP Gobierno y PP/Análisis magister/1. Tareas/Tarea2_vogue/faces.csv")
+```
 
 La base de datos utilizada (`faces.csv`) proviene del proyecto "The Pudding" un medio de periodismo visual que combina narrativas, datos y diseño interactivo para explorar fenómenos culturales contemporáneos.
 
@@ -46,12 +48,12 @@ Se revisaron los valores extremos para asegurar que la clasificación reflejara 
 
 Se seleccionaron las observaciones con los valores más bajos de `l`:
 
----
+``` r
 df_original |> 
 arrange(l) |> 
 select(model, l) |> 
 head(10)
----
+```
 
 Tras este comando, se muestra que Lupita Nyong’o, Michelle Obama, Serena Williams, Beyoncé, Halle Berry corresponden efectivamente a modelos con piel oscura, validando el extremo inferior de la escala.
 
@@ -59,66 +61,151 @@ Tras este comando, se muestra que Lupita Nyong’o, Michelle Obama, Serena Willi
 
 Se repitió el procedimiento en sentido inverso:
 
----
+``` r
 df_original |> 
 arrange(desc(l)) |> 
 select(model, l) |> 
 head(10)
----
+```
 
 A partir del comando Anne Hathaway, Jessica Chastain, Amy Adams, Natalia Vodianova, Keira Knightley corresponden a modelos de piel clara, confirmando la validez del extremo superior.
 
 ## 4. Preparar y limpiar los datos
 
-Conservaremos solo las variables necesarias (date y l), ya que model no se necesita para el análisis temporal y tone no es relevante porque se tiene otra clasificación para el análisis
+Conservaremos solo las variables necesarias (date y l), ya que model (nombre de las modelos) no se necesita para el análisis temporal y tone no es relevante porque se tiene otra clasificación para el análisis
 
 1.  **Seleccionar solo las columnas necesarias**
 
----
+``` r
 df_nuevatabla <- df_original |>
 select(date, l)
----
+```
 
 2.  **Convertir fecha y extraer el año**
 
----
+``` r
 df_nuevatabla <- df_nuevatabla |>
 mutate(year = year(mdy(date))) |>
 select(-date)
----
+```
 
 3.  **Crear categorías de todo de piel según cuartiles de luminosidad**
 
 Al inicio se generó la explicación de la clasificación
 
----
+``` r
 df_nuevatabla <- df_nuevatabla |> 
-mutate( tono_piel = cut( l, breaks = c(0.2127, 0.6058, 0.7266, 0.8824), labels = c("Oscuro", "Medio", "Claro"), include.lowest = TRUE ) )
----
+ mutate( tono_piel = cut( l, breaks = c(0.2127, 0.6058, 0.7266, 0.8824), labels =   c("Oscuro", "Medio", "Claro"), include.lowest = TRUE ) )
+```
 
-df_nuevatabla \<- df_nuevatabla \|\> mutate( tono_piel = cut( l, breaks = c(0.2127, 0.6058, 0.7266, 0.8824), labels = c("Oscuro", "Medio", "Claro"), include.lowest = TRUE ) )
+4.  **Agrupar por año y categoría de tono**
 
-# Agrupar por año y categoría de tono
+``` r
+df_nuevatabla <- df_nuevatabla |>
+ group_by(year, tono_piel) |>
+  summarise(cantidad = n(), .groups = "drop")
+```
 
-df_nuevatabla \<- df_nuevatabla \|\> group_by(year, tono_piel) \|\> summarise(cantidad = n(), .groups = "drop")
+5.  **Ver tabla resumen**
 
-# Ver tabla resumen
-
+``` r
 head(df_nuevatabla)
+```
 
-#5. Vizualización de los datos: Evolución temporal por tono de piel
+## 5. Visualización de datos 1: Evolución temporal por tono de piel
 
-Gráfico de líneas que muestra cómo varía la cantidad de modelos por tono de piel en las portadas entre 2000 y 2018.
+Gráfico de líneas que muestra cómo varía la cantidad de modelos por tono de piel en las portadas entre 2000 y 2018:
 
-tiempo \<- ggplot(df_nuevatabla, aes(x = factor(year), y = cantidad, color = tono_piel, group = tono_piel)) + geom_line(size = 1.2) + geom_point(size = 3) + scale_color_manual(values = c("Oscuro" = "#5A3E2B", "Medio" = "#C69C6D", "Claro" = "#F2E0C9")) + scale_y_continuous(breaks = seq(0, 16, by = 2)) + scale_x_discrete(breaks = seq(2000, 2018, by = 2)) + labs( title = "Evolución de tonos de piel en portadas de *Vogue* (2000–2018)", subtitle = "Número de modelos por categoría de tono de piel", x = "Año de publicación", y = "Cantidad de modelos en portadas", color = "Tono de piel" ) + theme_minimal(base_size = 12) + theme( plot.title = element_text(face = "bold"), legend.position = "bottom" )
+``` r
+tiempo <- ggplot(df_nuevatabla, 
+                 aes(x = factor(year), 
+                     y = cantidad, 
+                     color = tono_piel, 
+                     group = tono_piel)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c(
+    "Oscuro" = "#8B3A62",
+    "Medio"   = "#CD6090",
+    "Claro"   = "#FFC0CB"
+  )) +
+  scale_y_continuous(breaks = seq(0, 16, by = 2)) +
+  scale_x_discrete(breaks = seq(2000, 2018, by = 2)) +
+  labs(
+    title = "Evolución de tonos de piel en portadas de Vogue (2000–2018)",
+    subtitle = "Número de modelos por categoría de tono de piel",
+    x = "Año de publicación",
+    y = "Cantidad de modelos en portadas",
+    color = "Tono de piel"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+```
 
-#6# Calcular proporciones por año df_porcentaje \<- df_nuevatabla \|\> group_by(year) \|\> mutate(porcentaje = cantidad / sum(cantidad) \* 100)
+Ante esta codificación, resulta el siguiente gráfico:
 
-# Gráfico de barras apiladas con porcentajes
+ADJUNTAR GRÁFICO
 
-porcentaje \<- ggplot(df_porcentaje, aes(x = factor(year), y = porcentaje, fill = tono_piel)) + geom_bar(stat = "identity", position = "stack") + geom_text( aes(label = paste0(round(porcentaje, 1), "%")), position = position_stack(vjust = 0.5), color = "white", size = 3, family = "Arial" ) + scale_fill_manual(values = c( "Oscuro" = "#8B3A62", "Medio" = "#CD6090", "Claro" = "#FFC0CB" )) + labs( title = "Proporción de tonos de piel en portadas de Vogue (2000–2018)", subtitle = "Porcentaje de representación por año", x = "Año de publicación", y = "Porcentaje (%)", fill = "Tono de piel" ) + theme_minimal(base_size = 12) + theme( text = element_text(family = "Arial"), plot.title = element_text(size = 13, face = "bold", hjust = 0.5), plot.subtitle = element_text(size = 10, hjust = 0.5, color = "gray30"), axis.title.x = element_text(size = 10), axis.title.y = element_text(size = 10), axis.text.x = element_text(size = 8, angle = 45, vjust = 0.7), axis.text.y = element_text(size = 8), legend.title = element_text(size = 9), legend.text = element_text(size = 8), legend.position = "bottom" )
+## 6. Visualización de datos 2: Gráfico de barras por porcentaje
 
-#Consideraciones metodológicas
+Además del análisis basado en cantidades absolutas, se genera un gráfico que muestra la proporción (%) que representa cada categoría de tono de piel en las portadas de Vogue por año. Para ello, primero se calcula el porcentaje que corresponde a cada categoría dentro de cada año.
+
+1.  El siguiente código **agrupa los datos por año y calcula el porcentaje** que representa cada categoría respecto del total de modelos publicadas ese año:
+
+``` r
+df_porcentaje <- df_nuevatabla |> 
+  group_by(year) |> 
+  mutate(porcentaje = cantidad / sum(cantidad) * 100)
+```
+
+2.  **Códigos para gráfico de barras apiladas por porcentaje**
+
+``` r
+porcentaje <- ggplot(df_porcentaje, 
+                     aes(x = factor(year), 
+                         y = porcentaje, 
+                         fill = tono_piel)) +
+  geom_bar(stat = "identity", position = "stack") +
+  geom_text(
+    aes(label = paste0(round(porcentaje, 1), "%")),
+    position = position_stack(vjust = 0.5),
+    color = "white",
+    size = 3,
+    family = "Arial"
+  ) +
+  scale_fill_manual(values = c(
+    "Oscuro" = "#8B3A62",
+    "Medio"  = "#CD6090",
+    "Claro"  = "#FFC0CB"
+  )) +
+  labs(
+    title = "Proporción de tonos de piel en portadas de Vogue (2000–2018)",
+    subtitle = "Porcentaje de representación por año",
+    x = "Año de publicación",
+    y = "Porcentaje (%)",
+    fill = "Tono de piel"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    text = element_text(family = "Arial"),
+    plot.title = element_text(size = 13, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5, color = "gray30"),
+    axis.title.x = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x  = element_text(size = 8, angle = 45, vjust = 0.7),
+    axis.text.y  = element_text(size = 8),
+    legend.title = element_text(size = 9),
+    legend.text  = element_text(size = 8),
+    legend.position = "bottom"
+  )
+```
+
+## Conclusión  
+
+Consideraciones metodológicas
 
 Este método no busca establecer una tipología universal de tonos de piel, sino representar cómo se distribuyen dentro del universo de portadas de Vogue.
 
